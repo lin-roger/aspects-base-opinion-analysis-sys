@@ -1,0 +1,47 @@
+{
+    "title": {"text": "極性與意見占比", "subtext": "demo", "left": "center"},
+    "tooltip": {"trigger": "item"},
+    "legend": {
+        "orient": "vertical",
+        "left": "left",
+    },
+    "series": [
+        {
+            "name": "極性占比",
+            "type": "pie",
+            "radius": "30%",
+            "data": [
+                {"value": 500, "name": "POSITIVE"},
+                {"value": 500, "name": "NEGATIVE"},
+                {"value": 100, "name": "NATURAL"},
+            ],
+            "emphasis": {
+                "itemStyle": {
+                    "shadowBlur": 10,
+                    "shadowOffsetX": 0,
+                    "shadowColor": "rgba(0, 0, 0, 0.5)",
+                }
+            },
+        },
+        {
+            "name": "意見占比",
+            "type": "pie",
+            "radius": ["45%", "60%"],
+            "data": [
+                {"value": 250, "name": "好吃"},
+                {"value": 250, "name": "好香"},
+                {"value": 250, "name": "好臭"},
+                {"value": 250, "name": "好噁"},
+                {"value": 50, "name": "還好"},
+                {"value": 50, "name": "普通"},
+            ],
+            "emphasis": {
+                "itemStyle": {
+                    "shadowBlur": 10,
+                    "shadowOffsetX": 0,
+                    "shadowColor": "rgba(0, 0, 0, 0.5)",
+                }
+            },
+        },
+    ],
+}

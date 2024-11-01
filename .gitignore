@@ -1,0 +1,8 @@
+.env
+*.log
+*.pyc
+streamlit_frontend/.vs
+absa/bank.npy
+absa/ChineseEmoBank/*
+absa/vec/*
+scrapy/tmp/*

@@ -1,0 +1,15 @@
+{
+    "title": {
+        "text": "極性與意見占比",
+        "subtext": "demo",
+        "left": "center"
+    },
+    "tooltip": {
+        "trigger": "item"
+    },
+    "series": {
+        "type": "sunburst",
+        "data": [
+        ]
+    }
+}

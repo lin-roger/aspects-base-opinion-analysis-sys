@@ -1,0 +1,7 @@
+DrissionPage==4.0.5.6
+selenium
+python-dateutil
+duckdb
+polars
+elasticsearch[async]
+eland

@@ -1,0 +1,74 @@
+volumes:
+  ElasticSearch:
+    driver: local
+    # external: true
+
+services:
+  font_end:
+    image: usp/font_end
+    build:
+      context: ./streamlit_frontend
+      dockerfile: ./.devcontainer/Dockerfile
+    ports:
+      - "8501:8501"
+
+  absa_etl:
+    image: usp/absa_etl
+    build:
+      context: ./absa
+      dockerfile: ./.devcontainer/Dockerfile
+    runtime: nvidia
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [ gpu ]
+
+  scrapy:
+    image: usp/scrapy
+    build:
+      context: ./scrapy
+      dockerfile: ./.devcontainer/Dockerfile
+
+  elasticsearch:
+    image: usp/elastic_zh_cn
+    build:
+      context: ./elastic
+    ports:
+      - "9200:9200"
+    environment:
+      - bootstrap.memory_lock=true
+      - http.host=0.0.0.0
+      - http.port=9200
+      - transport.host=127.0.0.1
+      - ELASTIC_PASSWORD=$ELASTIC_PASSWORD
+      - KIBANA_PASSWORD=$KIBANA_PASSWORD
+      - "ES_JAVA_OPTS=-Xms512m -Xmx4g"
+      - "http.cors.enabled=true"
+      - "http.cors.allow-headers=X-Requested-With,X-Auth-Token,Content-Type,Content-Length,Authorization"
+      - "http.cors.allow-credentials=true"
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - ElasticSearch:/usr/share/elasticsearch/data
+      - type: bind
+        source: ./zh_dict_ik
+        target: /usr/share/elasticsearch/config/analysis-ik/dict
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.15.1
+    environment:
+      - xpack.security.enabled=false
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+      - ELASTICSEARCH_USERNAME=kibana_system
+      - ELASTICSEARCH_PASSWORD=${KIBANA_PASSWORD}
+    depends_on:
+      - elasticsearch
+    ports:
+      - "5601:5601"
