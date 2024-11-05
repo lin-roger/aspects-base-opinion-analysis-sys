@@ -1,23 +1,25 @@
 # For more information, please refer to https://aka.ms/vscode-docker-python
 # FROM python:3-slim
-FROM python:3.11
+# FROM python:3.11
+FROM huggingface/transformers-quantization-latest-gpu:latest
+# FROM python:3.11-slim
 
 # Keeps Python from generating .pyc files in the container
-ENV PYTHONDONTWRITEBYTECODE=1
+# ENV PYTHONDONTWRITEBYTECODE=1
 
 # Turns off buffering for easier container logging
-ENV PYTHONUNBUFFERED=1
+# ENV PYTHONUNBUFFERED=1
 
 WORKDIR /workdir
 COPY . .
 
 # Install pip requirements
 # COPY requirements.txt .
-RUN python -m pip install --upgrade pip \
-    && python -m pip install -r ./.devcontainer/requirements.txt
+RUN python3 -m pip install --upgrade pip \
+    && python3 -m pip install -r ./.devcontainer/requirements.txt
 
-RUN python -m pip install elasticsearch \
-    && python -m pip install eland
+RUN python3 -m pip install elasticsearch \
+    && python3 -m pip install eland
 
 # WORKDIR /app
 # COPY . /app
@@ -28,4 +30,4 @@ RUN python -m pip install elasticsearch \
 # USER appuser
 
 # During debugging, this entry point will be overridden. For more information, please refer to https://aka.ms/vscode-docker-python-debug
-CMD ["python", "aste_etl.py"]
+CMD ["python3", "aste_etl.py"]

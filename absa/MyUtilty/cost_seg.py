@@ -2,7 +2,6 @@ import hanlp
 from ckip_transformers.nlp import CkipWordSegmenter, CkipPosTagger
 from spacy.tokens import Doc
 
-# TODO: OOM dep_text
 class CostSegmenter:
     def __init__(self, vocab):
         self.vocab = vocab
@@ -11,9 +10,14 @@ class CostSegmenter:
         # self.dep = hanlp.load(hanlp.pretrained.dep.CTB9_UDC_ELECTRA_SMALL)
         self.dep = hanlp.load(hanlp.pretrained.dep.CTB9_DEP_ELECTRA_SMALL)
 
-    def __call__(self, text):
+    def __call__(self, text, max_len = 2048):
         try:
             seg_text = self.ws([text], show_progress=False)
+            while len(seg_text[-1]) >= max_len:
+                tmp = seg_text[-1]
+                seg_text[-1] = tmp[:max_len]
+                seg_text.append(tmp[max_len:])
+                
             pos_text = self.pos(seg_text, show_progress=False)
             dep_text = self.dep(seg_text, conll=False)
         except:
@@ -38,4 +42,5 @@ class CostSegmenter:
             )
             for i in zip(seg_text, pos_text, post_dep_text)
         ]
-        return docList[0]
+        return Doc.from_docs(docList)
+        # return docList[0]

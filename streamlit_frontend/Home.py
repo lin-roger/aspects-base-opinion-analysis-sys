@@ -14,6 +14,7 @@ def init_connection():
     # "https://elasticsearch:9200",
     # api_key="YjVwMHpKSUI1aVdrRE5nRHhQN0o6UkxLTGRoUGRSVDZic3NCU2IzNFVnQQ==",
     # verify_certs=False,
+    # return Elasticsearch("http://host.docker.internal:9200", verify_certs=False, basic_auth=("elastic", "123456"))
     return Elasticsearch("http://elasticsearch:9200", verify_certs=False, basic_auth=("elastic", "123456"))
        
 def set_query_word(x):

@@ -6,3 +6,6 @@ absa/bank.npy
 absa/ChineseEmoBank/*
 absa/vec/*
 scrapy/tmp/*
+emb_model/.locks
+emb_model/models--TencentBAC--Conan-embedding-v1
+

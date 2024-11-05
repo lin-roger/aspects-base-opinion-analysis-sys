@@ -8,6 +8,9 @@ from pyvirtualdisplay import Display
 from dateutil import parser
 import datetime
 import time
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class DcardCrawler:
@@ -29,15 +32,22 @@ class DcardCrawler:
         # options.no_imgs(True)
 
         self._driver = ChromiumPage(addr_or_opts=options)
-        
+
     def _comment_exraction(self, commentEle):
         try:
-            user_name, commen_context, comment_time = commentEle.child().child().child().child().child(2).children()
+            user_name, commen_context, comment_time = (
+                commentEle.child().child().child().child().child(2).children()
+            )
             user_name = user_name.child().child().text
             comment_time = comment_time.s_ele("tag:time").attr("datetime")
-            return (user_name, commen_context.text, self._date_time_UTC_Taipei(comment_time))
-        except:
-            # print(f"Error(No comment): {commentEle.text}")
+            return (
+                user_name,
+                commen_context.text,
+                self._date_time_UTC_Taipei(comment_time),
+            )
+        except Exception as e:
+            logger.error(f"Error(No comment): {commentEle.text}")
+            logger.exception(e)
             return (None, None, None)
 
     def _by_pass(self, page: ChromiumTab):
@@ -64,26 +74,32 @@ class DcardCrawler:
         try:
             article_content = tab.s_ele("css:article > div", index=2).text
         except Exception as e:
-            print(f"Error(No article_content): {article_url}", e)
+            logger.error(f"Error(No article_content): {article_url}")
+            logger.exception(e)
             tab.close()
             return "", []
-        
+
         tab.scroll.to_bottom()
         tab.wait(1)
-        
+
         try:
-            comment_contents = [self._comment_exraction(i) for i in tab.s_eles("css:section > div > div") if i.text != "" and i.text[0:2] != "查看"]
+            comment_contents = [
+                self._comment_exraction(i)
+                for i in tab.s_eles("css:section > div > div")
+                if i.text != "" and i.text[0:2] != "查看"
+            ]
         except Exception as e:
-            print(f"Error(No comment_contents): {article_url}", e)
+            logger.error(f"Error(No comment_contents): {article_url}")
+            logger.exception(e)
             tab.close()
             return article_content, []
-        
+
         tab.close()
         return article_content, comment_contents
 
     def get_article_info_list_from_board(
         self,
-        board: str|list[str] = "makeup",
+        board: str | list[str] = "makeup",
         least_n_days: int = 7,
     ):
         if isinstance(board, str):
@@ -98,26 +114,25 @@ class DcardCrawler:
 
             flag = 0
             while flag < 5:
-                tab.wait(1)
+                tab.wait(3)
                 aList = tab.s_eles("tag=article")
                 for a in aList:
                     try:
                         a_dateTime = self._date_time_UTC_Taipei(
                             a.s_ele("tag=time").attr("datetime")
                         )
-                        if (today - a_dateTime.date()).days <= least_n_days:
-                            flag=0
-                            a_text = a.s_ele("tag=h2").text
-                            a_href = a.s_ele("css:h2>a").link
-
-                            link_dateTime_set.add(
-                                (a_href.split("/")[-1], a_href, a_text, a_dateTime)
-                            )
+                        a_text = a.s_ele("tag=h2").text
+                        a_href = a.s_ele("css:h2>a").link
+                        a_info = (a_href.split("/")[-1], a_href, a_text, a_dateTime)
+                        if (today - a_dateTime.date()).days <= least_n_days and a_info not in link_dateTime_set:
+                            flag = 0
+                            link_dateTime_set.add(a_info)
                         else:
                             flag += 1
-                    except:
+                    except Exception as e:
                         self.error_set.append(a)
-                        print(a, a.text)
+                        logger.error(a, a.text)
+                        logger.exception(e)
                 scroll.to_bottom()
 
             tab.close()

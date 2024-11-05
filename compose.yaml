@@ -4,6 +4,27 @@ volumes:
     # external: true
 
 services:
+  localai:
+    image: localai/localai:latest-gpu-nvidia-cuda-12
+    container_name: localai
+    environment:
+      - MODELS_PATH=/models
+      - THREADS=8
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./emb_model:/models
+    tty: true
+    stdin_open: true
+    restart: always
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [ gpu ]
+
   font_end:
     image: usp/font_end
     build:
@@ -62,9 +83,12 @@ services:
         target: /usr/share/elasticsearch/config/analysis-ik/dict
 
   kibana:
-    image: docker.elastic.co/kibana/kibana:8.15.1
+    image: docker.elastic.co/kibana/kibana:8.15.3
     environment:
       - xpack.security.enabled=false
+      - xpack.encryptedSavedObjects.encryptionKey=243bd6658a429f393aa3b8d41995d9d9
+      - xpack.reporting.encryptionKey=0996d3c843aaf82311eaf16bfcfb9aaf
+      - xpack.security.encryptionKey=a3a598794a5468706600372b5cabd9e8
       - ELASTICSEARCH_URL=http://elasticsearch:9200
       - ELASTICSEARCH_USERNAME=kibana_system
       - ELASTICSEARCH_PASSWORD=${KIBANA_PASSWORD}

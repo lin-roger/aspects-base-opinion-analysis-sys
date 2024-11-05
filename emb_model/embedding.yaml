@@ -1,0 +1,5 @@
+name: tencentbac_conan_embedding_v1
+backend: sentencetransformers
+embeddings: true
+parameters:
+  model: TencentBAC/Conan-embedding-v1

@@ -1,5 +1,8 @@
 import time
+import logging
 from DrissionPage import ChromiumPage
+
+logger = logging.getLogger(__name__)
 
 class CloudflareBypasser:
     def __init__(self, driver: ChromiumPage, max_retries=-1, log=True):
@@ -53,7 +56,7 @@ class CloudflareBypasser:
 
     def log_message(self, message):
         if self.log:
-            print(message)
+            logger.error(message)
 
     def click_verification_button(self):
         try:

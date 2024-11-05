@@ -1,5 +1,5 @@
 # To ensure app dependencies are ported from your virtual environment/host machine into your container, run 'pip freeze > requirements.txt' in the terminal to overwrite this file
-shap
+# shap
 stanza
 spacy
 spacy-stanza
@@ -7,7 +7,7 @@ ckip-transformers
 # matplotlib
 nlp2
 scann
-tf-keras
+# tf-keras
 hanlp
 icecream
 # elasticsearch
