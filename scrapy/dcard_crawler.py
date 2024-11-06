@@ -1,6 +1,7 @@
 from CloudflareBypasser import CloudflareBypasser
 from DrissionPage import ChromiumPage, ChromiumOptions
 from DrissionPage._pages.chromium_tab import ChromiumTab
+from nlp2 import clean_httplink
 
 # from DrissionPage.common import from_selenium
 # from selenium import webdriver
@@ -72,7 +73,7 @@ class DcardCrawler:
         assert "dcard" in article_url
         tab = self._get_tab_from_url(article_url)
         try:
-            article_content = tab.s_ele("css:article > div", index=2).text
+            article_content = remove_httplink(tab.s_ele("css:article > div", index=2).text)
         except Exception as e:
             logger.error(f"Error(No article_content): {article_url}")
             logger.exception(e)

@@ -128,7 +128,7 @@ while True:
             # ed.pandas_to_eland(pd_data, client, "dcard", es_if_exists="append", es_type_overrides={'comments':'nested', 'title_aste':'nested', 'context_aste':'nested'})
             for idx, data in pd_data.iterrows():
                 client.update(
-                    index="dcard",
+                    index="docs",
                     id=idx,
                     body={
                         "doc": {

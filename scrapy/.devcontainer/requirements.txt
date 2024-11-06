@@ -6,3 +6,5 @@ polars
 elasticsearch[async]
 eland
 tqdm
+nlp2
+pyyaml

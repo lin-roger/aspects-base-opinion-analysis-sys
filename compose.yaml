@@ -32,12 +32,17 @@ services:
       dockerfile: ./.devcontainer/Dockerfile
     ports:
       - "8501:8501"
+    volumes:
+      - ./config.yaml:/workdir/config.yaml
+      - ./zh_dict_ik:/workdir/dict
 
   absa_etl:
     image: usp/absa_etl
     build:
       context: ./absa
       dockerfile: ./.devcontainer/Dockerfile
+    volumes:
+      - ./config.yaml:/workdir/config.yaml
     runtime: nvidia
     deploy:
       resources:
@@ -52,6 +57,8 @@ services:
     build:
       context: ./scrapy
       dockerfile: ./.devcontainer/Dockerfile
+    volumes:
+      - ./config.yaml:/workdir/config.yaml
 
   elasticsearch:
     image: usp/elastic_zh_cn
@@ -78,9 +85,8 @@ services:
         hard: -1
     volumes:
       - ElasticSearch:/usr/share/elasticsearch/data
-      - type: bind
-        source: ./zh_dict_ik
-        target: /usr/share/elasticsearch/config/analysis-ik/dict
+      - ./elastic/IKAnalyzer.cfg.xml:/usr/share/elasticsearch/config/analysis-ik/IKAnalyzer.cfg.xml
+      - ./zh_dict_ik:/usr/share/elasticsearch/config/analysis-ik/dict
 
   kibana:
     image: docker.elastic.co/kibana/kibana:8.15.3

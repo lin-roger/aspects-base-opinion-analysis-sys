@@ -1,17 +1,15 @@
-from calendar import c
-from multiprocessing import Pool
 from elasticsearch import Elasticsearch, helpers
 from dcard_crawler import DcardCrawler
 
 # from icecream import ic
 from tqdm import tqdm
-from tqdm.contrib.concurrent import process_map
 import datetime
 import json
 import pickle
 import pandas as pd
 import sys
 import logging
+import yaml
 
 logging.basicConfig(
     level=logging.INFO,
@@ -20,19 +18,12 @@ logging.basicConfig(
     filemode="a",
 )
 
-
-print("Elasticsearch client connecting...")
-client = Elasticsearch(
-    "http://elasticsearch:9200", verify_certs=False, basic_auth=("elastic", "123456")
-)
-
-
-print("DcardCrawler object creating...")
-crawler = DcardCrawler()
-
 settin_body = {
     "index": {
         "default_pipeline": "tencentbac_conan_embedding_pipe",
+        "analyze": {
+            "max_token_count": 100000,
+        },
         "analysis": {
             "analyzer": {
                 "ik_smart_plus": {
@@ -55,6 +46,7 @@ settin_body = {
         },
     }
 }
+
 
 mapping_body = {
     "properties": {
@@ -118,7 +110,22 @@ mapping_body = {
     }
 }
 
-idx_name = "docs"
+with open("config.yaml") as f:
+    config = yaml.safe_load(f)
+
+idx_name = config["index"]
+boards = config["boards"]
+least_n_days = config["least_n_days"]
+
+print("Elasticsearch client connecting...")
+client = Elasticsearch(
+    "http://elasticsearch:9200", verify_certs=False, basic_auth=("elastic", "123456")
+).options(request_timeout=-1)
+
+
+print("DcardCrawler object creating...")
+crawler = DcardCrawler()
+
 try:
     client.inference.get(inference_id="tencentbac_conan_embedding_v1")
 except Exception as e:
@@ -166,16 +173,12 @@ if not client.indices.exists(index=idx_name):
         index=idx_name, mappings=mapping_body, settings=settin_body, timeout="-1"
     )
 
-
-with open("bord_list.json") as f:
-    boards = json.load(f)
-
 for board in boards:
     fname_prifix = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
 
     print(f"`{board}` Article list getting...")
     article_list = crawler.get_article_info_list_from_board(
-        board=board, least_n_days=int(sys.argv[1])
+        board=board, least_n_days=least_n_days
     )
     article_list_T = list(zip(*article_list))
     with open(f"./tmp/{fname_prifix}_article_list_T.pkl", "wb") as f:
@@ -186,11 +189,6 @@ for board in boards:
         crawler.get_article_content_and_comment_by_url(i)
         for i in tqdm(article_list_T[1])
     ]
-    # context_list = process_map(crawler.get_article_content_and_comment_by_url, article_list_T[1], max_workers=8)
-    # def wapper(url):
-    #     return crawler.get_article_content_and_comment_by_url(url)
-    # with Pool(8) as p:
-    #     context_list = p.map(wapper, article_list_T[1])
 
     context_list_T = list(zip(*context_list))
     with open(f"./tmp/{fname_prifix}_context_list_T.pkl", "wb") as f:

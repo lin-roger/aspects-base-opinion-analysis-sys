@@ -7,7 +7,8 @@ RUN python -m pip install --upgrade pip \
     && python -m pip install -r ./.devcontainer/requirements.txt
 
 RUN python -m pip install elasticsearch \
-    && python -m pip install eland
+    && pip install --no-deps bertopic \
+    && pip install numpy hdbscan umap-learn pandas scikit-learn tqdm plotly pyyaml
 
 EXPOSE 8501
 

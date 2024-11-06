@@ -1,4 +1,5 @@
 from streamlit_echarts import st_echarts
+from elasticsearch import helpers
 from collections import Counter
 from itertools import chain
 from glom import glom, Coalesce
@@ -26,17 +27,19 @@ def query_absa(query_word):
             },
         },
     }
+    res = list(
+        helpers.scan(st.session_state.es, query=body, index=st.session_state.index)
+    )
+    assert len(res) != 0
 
-    res = st.session_state.es.search(index="dcard", body=body)
-    assert res.body["hits"]["total"]["value"] != 0
     coalesce_of_path = Coalesce(
-        "hits.hits.*._source.context_aste",
-        "hits.hits.*._source.title_aste",
-        "hits.hits.*._source.comments.*.content_aste",
+        "*._source.context_aste",
+        "*._source.title_aste",
+        "*._source.comments.*.content_aste",
     )
 
     aop_df = pd.DataFrame.from_dict(
-        list(chain.from_iterable(glom(res.body, coalesce_of_path)))
+        list(chain.from_iterable(glom(res, coalesce_of_path)))
     )
     aop_df["t"] = aop_df["p"].map(
         lambda x: "POS" if x >= 6 else "NAT" if x > 4 else "NEG"
@@ -80,7 +83,7 @@ def gen_wc_data():
         template = json.load(f)
     aop_df = query_absa(st.session_state.query_word)
     c = Counter(aop_df["a"].to_list()).items()
-    
+
     template["series"]["data"] = [{"name": k, "value": v} for k, v in c]
     return template
 

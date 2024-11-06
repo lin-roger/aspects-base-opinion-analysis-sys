@@ -1,0 +1,11 @@
+index: dcard
+# index: docs
+
+least_n_days: 1
+boards:
+  - youtuber,
+  - talk,
+  - trending,
+  - 3c,
+  - creditcard,
+  - makeup
