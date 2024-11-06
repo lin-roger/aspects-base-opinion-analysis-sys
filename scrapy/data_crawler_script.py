@@ -213,7 +213,6 @@ for board in boards:
             {
                 "_op_type": "index",
                 "_index": idx_name,
-                "_id": i["id"],
                 "platform": "Dcard",
                 "borad": board,
                 "status_code": "UN_ASTE",
