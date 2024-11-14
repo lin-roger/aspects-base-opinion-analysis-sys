@@ -1,11 +1,42 @@
-index: dcard
-# index: docs
+# index: dcard
+index: docs
+scheduler: False
+least_n_days: 5
 
-least_n_days: 1
-boards:
-  - youtuber,
-  - talk,
-  - trending,
-  - 3c,
-  - creditcard,
-  - makeup
+platforms:
+  ptt:
+    boards:
+      - Gossiping
+      - Stock
+      - HatePolitics
+      - movie
+      - PC_Shopping
+  dcard:
+    boards:
+      - youtuber
+      - talk
+      - trending
+      - 3c
+      - creditcard
+      - makeup
+
+# CKIP 中文詞類分析(三版). url: https://ckip.iis.sinica.edu.tw/data/paper/report/ckip-9305.pdf
+# 中央研究院平衡語料庫的內容與說明(修訂版), P.22. url: https://ckip.iis.sinica.edu.tw/CKIP/tr/9804_2013.pdf
+allow_pos:
+  - A
+  - Na
+  - Nb
+  - Nc
+  - Nd
+  - VA
+  - VB
+  - VC
+  - VE
+  - VF
+  - VH
+  - VAC
+  - VHC
+  - VI
+  - VK
+
+

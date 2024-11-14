@@ -3,12 +3,10 @@ from DrissionPage import ChromiumPage, ChromiumOptions
 from DrissionPage._pages.chromium_tab import ChromiumTab
 from nlp2 import clean_httplink
 
-# from DrissionPage.common import from_selenium
-# from selenium import webdriver
 from pyvirtualdisplay import Display
 from dateutil import parser
+
 import datetime
-import time
 import logging
 
 logger = logging.getLogger(__name__)
@@ -44,7 +42,7 @@ class DcardCrawler:
             return (
                 user_name,
                 commen_context.text,
-                self._date_time_UTC_Taipei(comment_time),
+                self._str_to_date_time(comment_time),
             )
         except Exception as e:
             logger.error(f"Error(No comment): {commentEle.text}")
@@ -55,11 +53,12 @@ class DcardCrawler:
         if page.title == "Dcard 需要確認您的連線是安全的":
             cf_bypasser = CloudflareBypasser(page)
             cf_bypasser.click_verification_button()
+            page.wait(5)
 
-    def _date_time_UTC_Taipei(self, dt: datetime.datetime | str):
+    def _str_to_date_time(self, dt: datetime.datetime | str):
         if isinstance(dt, str):
             dt = parser.parse(dt, ignoretz=True)
-        return dt + datetime.timedelta(hours=8)
+        return dt
 
     def _get_tab_from_url(self, url: str):
         tab = self._driver.new_tab(url)
@@ -72,13 +71,16 @@ class DcardCrawler:
     ):
         assert "dcard" in article_url
         tab = self._get_tab_from_url(article_url)
+        tab.wait(1)
         try:
-            article_content = remove_httplink(tab.s_ele("css:article > div", index=2).text)
+            article_content = clean_httplink(
+                tab.s_ele("css:article > div", index=2).text
+            )
         except Exception as e:
             logger.error(f"Error(No article_content): {article_url}")
             logger.exception(e)
             tab.close()
-            return "", []
+            return "", [], datetime.datetime.now()
 
         tab.scroll.to_bottom()
         tab.wait(1)
@@ -93,10 +95,10 @@ class DcardCrawler:
             logger.error(f"Error(No comment_contents): {article_url}")
             logger.exception(e)
             tab.close()
-            return article_content, []
+            return article_content, [], datetime.datetime.now()
 
         tab.close()
-        return article_content, comment_contents
+        return article_content, comment_contents, datetime.datetime.now()
 
     def get_article_info_list_from_board(
         self,
@@ -106,26 +108,40 @@ class DcardCrawler:
         if isinstance(board, str):
             board = [board]
         link_dateTime_set = set()
-        today = datetime.date.today()
+        least_n_days = datetime.timedelta(days=least_n_days)
+        now = datetime.datetime.now()
 
         for b in board:
             tab = self._get_tab_from_url(f"https://www.dcard.tw/f/{b}?tab=latest")
+            # tab.remove_ele(
+            #     tab.ele(
+            #         "tag:div@text()=上大學、出社會的你，快來閒聊板一起討論！立即加入Dcard ！",
+            #         timeout=0.5,
+            #     ).parent(3)
+            # )
             scroll = tab.scroll
-            # tab.set.load_mode.eager()
+            # scroll.to_bottom()
 
             flag = 0
-            while flag < 5:
-                tab.wait(3)
+            while flag < 10:
+                tab.wait(1)
                 aList = tab.s_eles("tag=article")
+                count = 0
                 for a in aList:
                     try:
-                        a_dateTime = self._date_time_UTC_Taipei(
-                            a.s_ele("tag=time").attr("datetime")
+                        a_dateTime = self._str_to_date_time(
+                            a.ele("tag=time").attr("datetime")
                         )
-                        a_text = a.s_ele("tag=h2").text
-                        a_href = a.s_ele("css:h2>a").link
+                        a_text = a.ele("tag=h2").text
+                        a_href = a.ele("css:h2>a").link
                         a_info = (a_href.split("/")[-1], a_href, a_text, a_dateTime)
-                        if (today - a_dateTime.date()).days <= least_n_days and a_info not in link_dateTime_set:
+
+                        time_diff = now - a_dateTime
+
+                        if a_info in link_dateTime_set:
+                            count += 1
+
+                        if time_diff <= least_n_days:
                             flag = 0
                             link_dateTime_set.add(a_info)
                         else:
@@ -134,7 +150,16 @@ class DcardCrawler:
                         self.error_set.append(a)
                         logger.error(a, a.text)
                         logger.exception(e)
-                scroll.to_bottom()
+
+                if len(aList) != 0:
+                    d_rate = count / len(aList)
+                    if d_rate == 1:
+                        if tab.ele("tag:div@text()=重新載入", timeout=0.5):
+                            print("429 Error, PLZ increase Timeout")
+                            logger.debug("429 Error, PLZ increase Timeout")
+                            break
+                        flag += 1
+                scroll.down(1000)
 
             tab.close()
         return list(link_dateTime_set)

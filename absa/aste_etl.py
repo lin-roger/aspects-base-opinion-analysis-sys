@@ -28,6 +28,7 @@ from spacy.tokens import Doc
 
 import functools
 import time
+import yaml
 from json import loads
 from typing import TypedDict
 
@@ -51,33 +52,51 @@ nlp_latin = load("./vec")
 EBS = EmoBankSearch(nlp_latin)
 EBS_Dict = functools.partial(EBS, to_dict=True)
 
-# client = Elasticsearch(
-#     "https://elasticsearch:9200",
-#     api_key="YjVwMHpKSUI1aVdrRE5nRHhQN0o6UkxLTGRoUGRSVDZic3NCU2IzNFVnQQ==",
-#     verify_certs=False,
-# )
-client = Elasticsearch("http://elasticsearch:9200", verify_certs=False, basic_auth=("elastic", "123456"))
+with open("config.yaml") as f:
+    config = yaml.safe_load(f)
+idx_name = config["index"]
+client = Elasticsearch(
+    "http://elasticsearch:9200", verify_certs=False, basic_auth=("elastic", "123456")
+)
 
 
 # %%
-def infer(text: str) -> list[AOP_dict]:
-    doc = EBS_Dict(nlp(text))
-    return doc._.aspect_sentiment_triplets
+# def infer(text: str) -> list[AOP_dict]:
+#     doc = EBS_Dict(nlp(text))
+#     return doc._.aspect_sentiment_triplets
 
-def aste_infer(texts: list[str]) -> list[list[AOP_dict]]:
-    return [infer(text) if text else None for text in texts]
-
+def text2doc(text: str) -> Doc:
+    if text:
+        return EBS_Dict(nlp(text))
+    else:
+        return None
 
 def comments_aste_infer(comments: list[dict]) -> list[dict]:
     comments = [
-        {
-            "content": comment["content"],
-            "content_aste": infer(comment["content"])
-        }
+        {"content": comment["content"], "content_aste": text2doc(comment["content"])._.aspect_sentiment_triplets}
         for comment in comments
         if comment["content"]
     ]
     return comments
+
+
+def gen_update_body(data):
+    for idx, row in data.iterrows():
+        yield {
+            "_op_type": "update",
+            "_index": idx_name,
+            "_id": idx,
+            "doc": {
+                "status_code": row["status_code"],
+                "title_aste": row["title_aste"],
+                "title_token": row["title_token"],
+                "title_tag": row["title_tag"],
+                "context_aste": row["context_aste"],
+                "context_token": row["context_token"],
+                "context_tag": row["context_tag"],
+                "comments": row["comments"],
+            },
+        }
 
 
 # %%
@@ -86,7 +105,7 @@ while True:
     ed_data = (
         ed.DataFrame(
             client,
-            "dcard",
+            idx_name,
             columns=[
                 "status_code",
                 "link",
@@ -98,17 +117,26 @@ while True:
                 "comments",
             ],
         )
-        .query("status_code == 'UN_ASTE'")
-        .head(5)
+        .query("status_code != 'ASTE_BY_RULE'")
+        .head(1000)
     )
     if not ed_data.empty:
         backoff_count = 1
         print("Processing data")
         try:
             pd_data = ed.eland_to_pandas(ed_data)
-            pd_data["status_code"] = "HAS_ASTE"
-            pd_data["title_aste"] = aste_infer(pd_data["title"].values)
-            pd_data["context_aste"] = aste_infer(pd_data["context"].values)
+            pd_data["status_code"] = "ASTE_BY_RULE"
+
+            title_doc = pd_data["title"].apply(text2doc)
+            pd_data["title_aste"] = title_doc.apply(lambda x: x._.aspect_sentiment_triplets if x else None)
+            pd_data["title_token"] = title_doc.apply(lambda x: [token.text for token in x] if x else None)
+            pd_data["title_tag"] = title_doc.apply(lambda x: [token.tag_ for token in x] if x else None)
+
+            context_doc = pd_data["context"].apply(text2doc)
+            pd_data["context_aste"] = context_doc.apply(lambda x: x._.aspect_sentiment_triplets if x else None)
+            pd_data["context_token"] = context_doc.apply(lambda x: [token.text for token in x] if x else None)
+            pd_data["context_tag"] = context_doc.apply(lambda x: [token.tag_ for token in x] if x else None)
+
             pd_data["comments"] = pd_data["comments"].apply(comments_aste_infer)
         except Exception as e:
             print("Error in processing data")
@@ -126,19 +154,7 @@ while True:
 
         try:
             # ed.pandas_to_eland(pd_data, client, "dcard", es_if_exists="append", es_type_overrides={'comments':'nested', 'title_aste':'nested', 'context_aste':'nested'})
-            for idx, data in pd_data.iterrows():
-                client.update(
-                    index="docs",
-                    id=idx,
-                    body={
-                        "doc": {
-                            "status_code": data["status_code"],
-                            "title_aste": data["title_aste"],
-                            "context_aste": data["context_aste"],
-                            "comments": data["comments"],
-                        },
-                    },
-                )
+            helpers.bulk(client, gen_update_body(pd_data))
         except Exception as e:
             print("Error in updating data")
             logging.error("Error in updating data")

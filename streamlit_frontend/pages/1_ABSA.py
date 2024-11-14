@@ -9,26 +9,77 @@ import pandas as pd
 import json
 
 
-# TODO: 更改查詢策略，從直接查Aspects改為查詢相關內容的Aspects，再讓使用者選擇Aspects drill down
 @st.cache_data(ttl=600, max_entries=10)
-def query_absa(query_word):
-    body = {
-        "_source": [
-            "title_aste.*",
-            "context_aste.*",
-            "date",
-            "comments.content_aste.*",
-        ],
-        "query": {
-            "multi_match": {
-                "query": query_word,
-                "fields": ["title", "context"],
-                "minimum_should_match": "50%",
+def query_absa(query_word, query_range):
+    if st.session_state.tern_seatch:
+        body = {
+            "_source": [
+                "title_aste.*",
+                "context_aste.*",
+                "date",
+                "comments.content_aste.*",
+            ],
+            "query": {
+                "bool": {
+                    "filter": [
+                        {
+                            "bool": {
+                                "should": [
+                                    {"term": {"title_token.keyword": query_word}},
+                                    {"term": {"context_token.keyword": query_word}},
+                                ],
+                            }
+                        },
+                        {
+                            "range": {
+                                "date": {
+                                    "gte": query_range[0].isoformat(),
+                                    "lte": query_range[1].isoformat(),
+                                    "time_zone": "+08:00",
+                                    "format": "yyyy-MM-dd",
+                                },
+                            }
+                        },
+                    ]
+                }
             },
-        },
-    }
+        }
+    else:
+        body = {
+            "_source": [
+                "title_aste.*",
+                "context_aste.*",
+                "date",
+                "comments.content_aste.*",
+            ],
+            "query": {
+                "bool": {
+                    "must": [
+                        {
+                            "multi_match": {
+                                "query": query_word,
+                                "fields": ["title", "context"],
+                                "minimum_should_match": "50%",
+                            }
+                        },
+                        {
+                            "range": {
+                                "date": {
+                                    "gte": query_range[0].isoformat(),
+                                    "lte": query_range[1].isoformat(),
+                                    "time_zone": "+08:00",
+                                    "format": "yyyy-MM-dd",
+                                },
+                            }
+                        },
+                    ]
+                }
+            },
+        }
     res = list(
-        helpers.scan(st.session_state.es, query=body, index=st.session_state.index)
+        helpers.scan(
+            st.session_state.es, query=body, index=st.session_state.index, size=5000
+        )
     )
     assert len(res) != 0
 
@@ -68,7 +119,7 @@ def generate_options(aspect):
         template = json.load(f)
 
     try:
-        aop_df = query_absa(st.session_state.query_word)
+        aop_df = query_absa(st.session_state.query_word, st.session_state.query_range)
     except AssertionError:
         st.write(f"## 找不到 *{st.session_state.query_word}*")
         return template
@@ -81,7 +132,7 @@ def generate_options(aspect):
 def gen_wc_data():
     with open("template/absa_wc_template.json") as f:
         template = json.load(f)
-    aop_df = query_absa(st.session_state.query_word)
+    aop_df = query_absa(st.session_state.query_word, st.session_state.query_range)
     c = Counter(aop_df["a"].to_list()).items()
 
     template["series"]["data"] = [{"name": k, "value": v} for k, v in c]
@@ -101,11 +152,15 @@ select = st_echarts(
     height="300px",
 )
 
+# TODO: o太多時，需要加其他類別替代
+
 if select is not None:
     st.write(f"## 「{select}」之情感分析")
     st_echarts(
         options=generate_options(select),
         height="600px",
     )
+
+# TODO: ABSA時間軸
 
 # st.write(f"## *{st.session_state.query_word}* 的情感趨勢")

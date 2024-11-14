@@ -5,7 +5,7 @@ volumes:
 
 services:
   localai:
-    image: localai/localai:latest-gpu-nvidia-cuda-12
+    image: localai/localai:master-cublas-cuda12
     container_name: localai
     environment:
       - MODELS_PATH=/models
@@ -35,6 +35,7 @@ services:
     volumes:
       - ./config.yaml:/workdir/config.yaml
       - ./zh_dict_ik:/workdir/dict
+      - ./topics_model_persistent:/workdir/topics_model_persistent
 
   absa_etl:
     image: usp/absa_etl
@@ -43,6 +44,7 @@ services:
       dockerfile: ./.devcontainer/Dockerfile
     volumes:
       - ./config.yaml:/workdir/config.yaml
+      - ./topics_model_persistent:/workdir/topics_model_persistent
     runtime: nvidia
     deploy:
       resources:

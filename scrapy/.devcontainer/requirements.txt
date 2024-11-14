@@ -8,3 +8,5 @@ eland
 tqdm
 nlp2
 pyyaml
+apscheduler
+PttWebCrawler @ https://github.com/jwlin/ptt-web-crawler/archive/master.zip

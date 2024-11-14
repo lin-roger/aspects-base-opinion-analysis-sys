@@ -6,6 +6,6 @@ absa/bank.npy
 absa/ChineseEmoBank/*
 absa/vec/*
 scrapy/tmp/*
-emb_model/.locks
-emb_model/models--TencentBAC--Conan-embedding-v1
-
+emb_model/*/*
+topics_model_persistent/*
+meta_lr_absa/SIGHAN2024_dimABSA_TrainingSet1_Traditional.json

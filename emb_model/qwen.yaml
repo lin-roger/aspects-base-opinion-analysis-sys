@@ -1,0 +1,6 @@
+name: vllm
+backend: vllm
+parameters:
+    model: "Qwen/Qwen2.5-7B-Instruct-GPTQ-Int4"
+    quantization: "gptq"
+    kv_cache_dtype: "fp8_e5m2"

@@ -3,6 +3,8 @@ from elasticsearch import Elasticsearch
 
 import streamlit as st
 import yaml
+import datetime
+
 
 with open("config.yaml", "r") as stream:
     config = yaml.safe_load(stream)
@@ -28,12 +30,22 @@ def set_query_word(x):
         st.session_state.query_word = x
 
 
+def set_query_range(x):
+    st.session_state.query_range = x
+
+
 if "query_word" not in st.session_state:
     st.session_state.query_word = ""
+if "query_range" not in st.session_state:
+    st.session_state.query_range = None
 if "es" not in st.session_state:
     st.session_state.es = init_connection()
 if "index" not in st.session_state:
     st.session_state.index = config["index"]
+if "allow_pos" not in st.session_state:
+    st.session_state.allow_pos = set(config["allow_pos"])
+if "tern_seatch" not in st.session_state:
+    st.session_state.tern_seatch = True
 
 st.sidebar.header("Home")
 st.write("# 社群輿情追蹤系統 💬")
@@ -54,4 +66,17 @@ for h, c in zip(hito, col):
         st.button(h, on_click=partial(set_query_word, h))
 
 set_query_word(st.text_input("輸入查詢關鍵字", st.session_state.query_word))
-st.write(f"查詢關鍵字: {st.session_state.query_word}")
+# st.write(f"查詢關鍵字: {st.session_state.query_word}")
+
+today = datetime.datetime.now()
+last_month = today - datetime.timedelta(days=30)
+
+set_query_range(
+    st.date_input(
+        "查詢時間範圍",
+        value=(last_month, today),
+        format="YYYY/MM/DD",
+    )
+)
+
+st.session_state.tern_seatch = st.toggle("Term Search", st.session_state.tern_seatch)

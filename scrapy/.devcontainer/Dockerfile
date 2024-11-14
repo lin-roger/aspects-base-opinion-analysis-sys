@@ -48,7 +48,7 @@ COPY . .
 # Install Python dependencies
 RUN pip3 install -r ./.devcontainer/requirements.txt
 
-CMD ["tail", "-f", "/dev/null"]
+# CMD ["tail", "-f", "/dev/null"]
 
 # Expose the port for remote debugging
 # EXPOSE 9222
@@ -58,3 +58,4 @@ CMD ["tail", "-f", "/dev/null"]
 
 # Default command
 # CMD ["python3", "server.py"]
+CMD ["/bin/python3", "crawler_script.py"]
