@@ -17,7 +17,7 @@ query_word = st.session_state.query_word
 query_range = st.session_state.query_range
 es = st.session_state.es
 index = st.session_state.index
-topic_model = BERTopic.load("./topics_model_persistent")
+topic_model = BERTopic.load("model_persistent/topics_model")
 
 
 def tag_filter_by_pos(tag_list, pos_list):

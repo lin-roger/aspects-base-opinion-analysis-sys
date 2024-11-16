@@ -39,4 +39,28 @@ allow_pos:
   - VI
   - VK
 
+n_gram_model:
+  allow_pos:
+    - Na
+    - Nb
+    - Nc
+    - Nd
+    - A
+    - VA
+    - VAC
+    - VB
+    - VC
+    - VD
+    - VE
+    - VF
+    - VG
+    - VH
+    - VHC
+    - VI
+    - VJ
+    - VK
+    - VL
+    - FW
+    
+
 

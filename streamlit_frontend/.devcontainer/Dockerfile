@@ -13,6 +13,8 @@ RUN python -m pip install --upgrade pip \
 RUN python -m pip install elasticsearch \
     && python -m pip install bertopic 
 
+RUN python -m pip install streamlit-keyup
+
 EXPOSE 8501
 
 COPY . .

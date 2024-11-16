@@ -61,6 +61,6 @@ topic_model = BERTopic(
 ).fit(docs, vecs)
 
 # %%
-topic_model.save("/workdir/topics_model_persistent", serialization="safetensors", save_ctfidf=True)
+topic_model.save("/workdir/model_persistent/topics_model", serialization="safetensors", save_ctfidf=True)
 
 

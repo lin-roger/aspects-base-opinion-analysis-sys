@@ -7,5 +7,5 @@ absa/ChineseEmoBank/*
 absa/vec/*
 scrapy/tmp/*
 emb_model/*/*
-topics_model_persistent/*
+model_persistent/*
 meta_lr_absa/SIGHAN2024_dimABSA_TrainingSet1_Traditional.json

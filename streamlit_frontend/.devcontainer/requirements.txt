@@ -1,4 +1,6 @@
 streamlit
 streamlit-echarts
+streamlit-searchbox
 flatdict
 glom
+nltk
