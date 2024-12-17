@@ -22,6 +22,7 @@ from spacy import blank
 from spacy import load
 from MyUtilty.tag2pos import tag2posFactory
 from MyUtilty.psoPipe import PendingAspectsOpinionsPipe
+from MyUtilty.mergePipe import MergePipe
 from MyUtilty.cost_seg import CostSegmenter
 from MyUtilty.emoBankSearch import EmoBankSearch
 from spacy.tokens import Doc
@@ -46,6 +47,7 @@ Doc.set_extension("aspect_sentiment_triplets", default=[])
 nlp = blank("xx")
 nlp.tokenizer = CostSegmenter(nlp.vocab)
 nlp.add_pipe("tag2pos")
+nlp.add_pipe("merge_pipe")
 nlp.add_pipe("pending_aspects_opinions_pipe")
 
 nlp_latin = load("./vec")
@@ -117,7 +119,7 @@ while True:
                 "comments",
             ],
         )
-        .query("status_code != 'ASTE_BY_RULE'")
+        .query("status_code != 'ASTE_BY_RULE_v2'")
         .head(1000)
     )
     if not ed_data.empty:
@@ -125,17 +127,21 @@ while True:
         print("Processing data")
         try:
             pd_data = ed.eland_to_pandas(ed_data)
-            pd_data["status_code"] = "ASTE_BY_RULE"
+            pd_data["status_code"] = "ASTE_BY_RULE_v2"
 
             title_doc = pd_data["title"].apply(text2doc)
             pd_data["title_aste"] = title_doc.apply(lambda x: x._.aspect_sentiment_triplets if x else None)
             pd_data["title_token"] = title_doc.apply(lambda x: [token.text for token in x] if x else None)
             pd_data["title_tag"] = title_doc.apply(lambda x: [token.tag_ for token in x] if x else None)
+            pd_data["title_dep"] = title_doc.apply(lambda x: [token.dep_ for token in x] if x else None)
+            pd_data["title_head"] = title_doc.apply(lambda x: [token.head for token in x] if x else None)
 
             context_doc = pd_data["context"].apply(text2doc)
             pd_data["context_aste"] = context_doc.apply(lambda x: x._.aspect_sentiment_triplets if x else None)
             pd_data["context_token"] = context_doc.apply(lambda x: [token.text for token in x] if x else None)
             pd_data["context_tag"] = context_doc.apply(lambda x: [token.tag_ for token in x] if x else None)
+            pd_data["context_dep"] = context_doc.apply(lambda x: [token.dep_ for token in x] if x else None)
+            pd_data["context_head"] = context_doc.apply(lambda x: [token.head for token in x] if x else None)
 
             pd_data["comments"] = pd_data["comments"].apply(comments_aste_infer)
         except Exception as e:

@@ -3,7 +3,7 @@ from DrissionPage import ChromiumPage, ChromiumOptions
 from DrissionPage._pages.chromium_tab import ChromiumTab
 from nlp2 import clean_httplink
 
-from pyvirtualdisplay import Display
+# from pyvirtualdisplay import Display
 from dateutil import parser
 
 import datetime
@@ -16,9 +16,9 @@ class DcardCrawler:
     def __init__(self, headless: bool = False):
         self.error_set = []
 
-        display = Display(size=(1920, 1080))
+        # display = Display(size=(1920, 1080))
         # display = Display(visible=True, size=(1920, 1080))
-        display.start()
+        # display.start()
 
         browser_path = "/usr/bin/google-chrome"
         options = ChromiumOptions()
@@ -74,7 +74,7 @@ class DcardCrawler:
         tab.wait(1)
         try:
             article_content = clean_httplink(
-                tab.s_ele("css:article > div", index=2).text
+                tab.s_ele("css:article > div", index=2, timeout=0.5).text
             )
         except Exception as e:
             logger.error(f"Error(No article_content): {article_url}")
@@ -88,7 +88,7 @@ class DcardCrawler:
         try:
             comment_contents = [
                 self._comment_exraction(i)
-                for i in tab.s_eles("css:section > div > div")
+                for i in tab.s_eles("css:section > div > div", timeout=0.5)
                 if i.text != "" and i.text[0:2] != "查看"
             ]
         except Exception as e:

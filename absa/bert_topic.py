@@ -5,6 +5,9 @@ from glom import glom
 from umap import UMAP
 from sklearn.feature_extraction.text import CountVectorizer
 from bertopic import BERTopic
+# from cuml.cluster import HDBSCAN
+# from cuml.manifold import UMAP
+
 
 import yaml
 import numpy as np
@@ -53,9 +56,13 @@ vecs = np.array(vec_df["context_vector"].tolist())
 umap_model = UMAP(
     n_neighbors=15, n_components=5, min_dist=0.0, metric="cosine", random_state=42
 )
+# umap_model = UMAP(n_components=5, n_neighbors=15, min_dist=0.0)
+# hdbscan_model = HDBSCAN(min_samples=10, gen_min_span_tree=True, prediction_data=True)
+
 topic_model = BERTopic(
     language="chinese",
     umap_model=umap_model,
+    # hdbscan_model=hdbscan_model,
     min_topic_size=20,
     vectorizer_model=CountVectorizer(tokenizer=lambda x: x.split(" ")),
 ).fit(docs, vecs)

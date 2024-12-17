@@ -15,6 +15,14 @@ RUN python3 -m pip install elasticsearch \
     && python3 -m pip install eland \
     && python3 -m pip install bertopic
 
+# RUN pip install \
+#     --extra-index-url=https://pypi.nvidia.com \
+#     "cudf-cu11==24.10.*" "dask-cudf-cu11==24.10.*" "cuml-cu11==24.10.*" \
+#     "cugraph-cu11==24.10.*" "nx-cugraph-cu11==24.10.*" "cuspatial-cu11==24.10.*" \
+#     "cuproj-cu11==24.10.*" "cuxfilter-cu11==24.10.*" "cucim-cu11==24.10.*" \
+#     "pylibraft-cu11==24.10.*" "raft-dask-cu11==24.10.*" "cuvs-cu11==24.10.*" \
+#     "nx-cugraph-cu11==24.10.*"
+
 COPY . .
 
 # CMD ["tail", "-f", "/dev/null"]

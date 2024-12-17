@@ -87,7 +87,7 @@ def index_check(client: Elasticsearch, idx_name: str):
 
 
 def ptt_crawler_job():
-    for board in platforms["ptt"]["boards"]:
+    for board in platforms["PTT"]["boards"]:
         print(f"`{board}` Article list getting...")
         logging.info(f"`{board}` Article list getting...")
         data_generater = get_ptt_article_generator(
@@ -113,7 +113,7 @@ def ptt_crawler_job():
 
 
 def dcard_crawler_job():
-    for board in platforms["dcard"]["boards"]:
+    for board in platforms["Dcard"]["boards"]:
         print(f"`{board}` Article list getting...")
         logging.info(f"`{board}` Article list getting...")
         article_list = crawler.get_article_info_list_from_board(
@@ -222,10 +222,11 @@ def remove_duplicate_data():
     helpers.bulk(client, gen_del_body(del_ids_list))
 
 
-time.sleep(60)
+# time.sleep(15)
+# time.sleep(60)
 
 # load config
-with open("config.yaml") as f:
+with open("config.yaml", encoding="utf-8") as f:
     config = yaml.safe_load(f)
 idx_name = config["index"]
 platforms = config["platforms"]
@@ -236,8 +237,11 @@ sche = config["scheduler"]
 # load mapping and setting
 print("Elasticsearch client connecting...")
 logging.info("Elasticsearch client connecting...")
+# client = Elasticsearch(
+#     "http://elasticsearch:9200", verify_certs=False, basic_auth=("elastic", "123456")
+# )
 client = Elasticsearch(
-    "http://elasticsearch:9200", verify_certs=False, basic_auth=("elastic", "123456")
+    "http://host.docker.internal:9200", verify_certs=False, basic_auth=("elastic", "123456")
 )
 
 inference_check(client)

@@ -1,17 +1,17 @@
 # index: dcard
 index: docs
 scheduler: False
-least_n_days: 5
+least_n_days: 1
 
 platforms:
-  ptt:
+  PTT:
     boards:
       - Gossiping
       - Stock
       - HatePolitics
       - movie
       - PC_Shopping
-  dcard:
+  Dcard:
     boards:
       - youtuber
       - talk
